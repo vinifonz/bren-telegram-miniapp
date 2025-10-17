@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -17,12 +18,14 @@
         /* Styles the main body of the page */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff; /* White background as requested */
+            background-color: #ffffff;
+            /* White background as requested */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* Prevents scrollbars */
+            overflow: hidden;
+            /* Prevents scrollbars */
         }
 
         /* Main container for the content */
@@ -44,7 +47,8 @@
         .loading-bar-container {
             width: 100%;
             height: 8px;
-            background-color: #e0e7ff; /* Lighter blue for the track */
+            background-color: #e0e7ff;
+            /* Lighter blue for the track */
             border-radius: 4px;
             overflow: hidden;
         }
@@ -53,7 +57,8 @@
         .loading-bar {
             width: 100%;
             height: 100%;
-            background-color: #3b82f6; /* Modern blue color inspired by Pocket Option */
+            background-color: #3b82f6;
+            /* Modern blue color inspired by Pocket Option */
             border-radius: 4px;
             animation: loading-animation 1.5s ease-in-out infinite;
         }
@@ -63,124 +68,119 @@
             0% {
                 transform: translateX(-100%);
             }
+
             50% {
                 transform: translateX(0%);
             }
+
             100% {
                 transform: translateX(100%);
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Pocket Option logo -->
-        <img src="https://1000logos.net/wp-content/uploads/2023/11/Pocket-Option-Logo.png" alt="Pocket Option Logo" class="logo">
-        
+        <img src="https://1000logos.net/wp-content/uploads/2023/11/Pocket-Option-Logo.png" alt="Pocket Option Logo"
+            class="logo">
+
         <!-- Modern loading bar -->
         <div class="loading-bar-container">
             <div class="loading-bar"></div>
         </div>
     </div>
 
-    <script>
-    // --- Configuration ---
-    const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback1&code=50START&click_id=';
-    const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
-    
-    /**
- * Sends event data to webhook (non-blocking)
- * @param {string | number} userId - The user's Telegram ID
- * @param {string} eventName - The event name (e.g., 'click_app')
- */
-function sendWebhook(userId, eventName) {
-    console.log('=== INICIANDO ENVIO DE WEBHOOK ===');
-    console.log('User ID:', userId);
-    console.log('Event:', eventName);
-    console.log('Webhook URL:', WEBHOOK_URL);
-    
-    const payload = JSON.stringify({
-        telegram_user_id: userId,
-        event: eventName,
-        timestamp: new Date().toISOString()
-    });
-    
-    console.log('Payload:', payload);
+   <script>
+        // --- Configuration ---
+        const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback1&code=50START&click_id=';
+        const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
+ 
+        /**
+     * Sends event data to webhook (non-blocking)
+     * @param {string | number} userId - The user's Telegram ID
+     * @param {string} eventName - The event name (e.g., 'click_app')
+     */
+        function sendWebhook(userId, eventName) {
+  const payloadObj = {
+    telegram_user_id: String(userId),
+    event: eventName,
+    timestamp: new Date().toISOString()
+  };
+  const payload = JSON.stringify(payloadObj);
 
-    // Try sendBeacon first (best for this use case)
-    if (navigator.sendBeacon) {
-        console.log('Usando sendBeacon...');
-        const blob = new Blob([payload], { type: 'application/json' });
-        const result = navigator.sendBeacon(WEBHOOK_URL, blob);
-        console.log('sendBeacon result:', result);
-    } else {
-        console.log('sendBeacon não disponível, usando fetch...');
-        // Fallback: async fetch without waiting
-        fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true
-        })
-        .then(response => {
-            console.log('Fetch response status:', response.status);
-            return response.text();
-        })
-        .then(data => console.log('Fetch response data:', data))
-        .catch(err => console.error('Webhook error:', err));
-    }
+  // 1) Tenta sendBeacon (não faz preflight e é ideal pra navegação)
+  if (navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: 'text/plain' }); // <- era application/json
+    navigator.sendBeacon(WEBHOOK_URL, blob);
+    return;
+  }
+
+  // 2) Fallback fetch "simple"
+  fetch(WEBHOOK_URL, {
+    method: 'POST',
+    // NÃO envie 'application/json' para evitar preflight
+    headers: { 'Content-Type': 'text/plain' },
+    body: payload,
+    keepalive: true,   // bom para fechamento de página
+    // credentials: 'omit' // (default) mantenha omit
+    // mode: 'cors' // (default) pode omitir
+  }).catch(console.error);
 }
-    
-    /**
-     * Redirects the user to the final URL.
-     * @param {string | number | null} userId - The user's Telegram ID or null if not found.
-     */
-    function redirectToPlatform(userId) {
-        const finalId = userId || 'error_no_id';
-        const finalUrl = PLATFORM_URL + finalId;
-        
-        // Send webhook BEFORE redirecting (non-blocking)
-        if (userId) {
-            sendWebhook(userId, 'click_app');
-        }
-        
-        console.log(`Redirecting to: ${finalUrl}`);
-        window.location.replace(finalUrl);
-    }
 
-    /**
-     * Main function to initialize the redirection process.
-     */
-    function initializeRedirect() {
-        try {
-            if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
-                throw new Error('Telegram Web App context not found.');
+
+        /**
+         * Redirects the user to the final URL.
+         * @param {string | number | null} userId - The user's Telegram ID or null if not found.
+         */
+        function redirectToPlatform(userId) {
+            const finalId = userId || 'error_no_id';
+            const finalUrl = PLATFORM_URL + finalId;
+
+            // Send webhook BEFORE redirecting (non-blocking)
+            if (userId) {
+                sendWebhook(userId, 'click_app');
             }
 
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-
-            const userId = tg.initDataUnsafe?.user?.id;
-            redirectToPlatform(userId);
-
-        } catch (error) {
-            console.error('Initialization Error:', error.message);
-            redirectToPlatform(null);
+            console.log(`Redirecting to: ${finalUrl}`);
+            window.location.replace(finalUrl);
         }
-    }
 
-    // --- Execution ---
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeRedirect);
-    } else {
-        initializeRedirect();
-    }
+        /**
+         * Main function to initialize the redirection process.
+         */
+        function initializeRedirect() {
+            try {
+                if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                    throw new Error('Telegram Web App context not found.');
+                }
 
-    setTimeout(() => {
-        console.log('Fallback triggered: Redirecting without ID if not already done.');
-        redirectToPlatform(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null);
-    }, 2500);
-</script>
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+
+                const userId = tg.initDataUnsafe?.user?.id;
+                redirectToPlatform(userId);
+
+            } catch (error) {
+                console.error('Initialization Error:', error.message);
+                redirectToPlatform(null);
+            }
+        }
+
+        // --- Execution ---
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeRedirect);
+        } else {
+            initializeRedirect();
+        }
+
+        setTimeout(() => {
+            console.log('Fallback triggered: Redirecting without ID if not already done.');
+            redirectToPlatform(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null);
+        }, 2500);
+    </script>
 </body>
+
 </html>
