@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Redirecionando...</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1d2e 0%, #2d3147 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .loader-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(74, 144, 226, 0.2);
+            border-top: 4px solid #4a90e2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(82, 196, 26, 0.3);
+            border-top: 3px solid #52c41a;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite reverse;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+
+        .error {
+            color: #ff4d4f;
+            background: rgba(255, 77, 79, 0.1);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 77, 79, 0.3);
+        }
+
+        .dots {
+            display: inline-block;
+        }
+
+        .dots span {
+            animation: blink 1.4s infinite;
+            animation-fill-mode: both;
+        }
+
+        .dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0;
+            }
+
+            40% {
+                opacity: 1;
+            }
+        }
+
+        .success-check {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            display: none;
+        }
+
+        .success-check.show {
+            display: block;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-check svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .checkmark {
+            stroke: #52c41a;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawCheck 0.5s ease-out 0.3s forwards;
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .circle-check {
+            stroke: #52c41a;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: drawCircle 0.5s ease-out forwards;
+        }
+
+        @keyframes drawCircle {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">💼</div>
+
+        <div class="loader" id="loader">
+            <div class="loader-circle"></div>
+            <div class="loader-inner"></div>
+        </div>
+
+        <div class="success-check" id="successCheck">
+            <svg viewBox="0 0 100 100">
+                <circle class="circle-check" cx="50" cy="50" r="45" />
+                <polyline class="checkmark" points="25,50 40,65 75,35" />
+            </svg>
+        </div>
+
+        <h1 id="title">Redirecionando<span class="dots"><span>.</span><span>.</span><span>.</span></span></h1>
+        <p id="message">Preparando seu acesso à plataforma</p>
+        <div class="error" id="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuração
+        const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback1&code=50START&click_id=';
+
+        // Elementos DOM
+        const titleEl = document.getElementById('title');
+        const messageEl = document.getElementById('message');
+        const errorEl = document.getElementById('error');
+        const loaderEl = document.getElementById('loader');
+        const successCheckEl = document.getElementById('successCheck');
+
+        // Função principal
+        function initMiniApp() {
+            try {
+                // Verifica se o Telegram Web App está disponível
+                if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                    throw new Error('Telegram Web App não está disponível');
+                }
+
+                const tg = window.Telegram.WebApp;
+
+                // Expande o app para tela cheia
+                tg.expand();
+
+                // Aguarda um momento para garantir que os dados estão disponíveis
+                setTimeout(() => {
+                    // Captura o ID do usuário
+                    const userId = tg.initDataUnsafe?.user?.id;
+
+                    if (!userId) {
+                        throw new Error('Não foi possível obter seu ID do Telegram');
+                    }
+
+                    // Monta a URL final
+                    const finalUrl = PLATFORM_URL + userId;
+
+                    // Console log para debug (não visível para o usuário)
+                    console.log('URL Final:', finalUrl);
+                    console.log('User ID:', userId);
+
+                    // Atualiza mensagem
+                    messageEl.textContent = 'Verificando seus dados';
+
+                    // Simula verificação e mostra sucesso
+                    setTimeout(() => {
+                        loaderEl.style.display = 'none';
+                        successCheckEl.classList.add('show');
+                        titleEl.innerHTML = 'Tudo pronto!';
+                        messageEl.textContent = 'Você será redirecionado em instantes';
+
+                        // Redireciona após 1.5 segundos
+                        setTimeout(() => {
+                            window.location.href = finalUrl;
+                        }, 1500);
+                    }, 1000);
+
+                }, 300);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                showError(error.message);
+            }
+        }
+
+        // Função para mostrar erro
+        function showError(message) {
+            loaderEl.style.display = 'none';
+            titleEl.textContent = 'Ops! Algo deu errado';
+            messageEl.style.display = 'none';
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+
+            // Tenta redirecionar mesmo sem o ID após 5 segundos
+            setTimeout(() => {
+                errorEl.textContent = message + ' - Redirecionando sem ID...';
+                setTimeout(() => {
+                    window.location.href = PLATFORM_URL + 'error';
+                }, 2000);
+            }, 3000);
+        }
+
+        // Inicializa quando o Telegram Web App estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMiniApp);
+        } else {
+            initMiniApp();
+        }
+
+        // Fallback: se após 2 segundos não inicializou, tenta de novo
+        setTimeout(() => {
+            initMiniApp();
+        }, 2000);
+    </script>
+</body>
+
+</html>
