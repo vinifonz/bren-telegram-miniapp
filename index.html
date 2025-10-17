@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Redirecting...</title>
-    <!-- Imports the Telegram Web App script -->
+    <!-- Importa o script do Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Basic reset for all elements */
+        /* Reset básico para todos os elementos */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Styles for the body */
+        /* Estilos para o corpo da página */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #ffffff; /* White background as requested */
+            background-color: #ffffff; /* Fundo branco, como solicitado */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -25,7 +25,7 @@
             overflow: hidden;
         }
 
-        /* Centered container for the content */
+        /* Container centralizado para o conteúdo */
         .container {
             text-align: center;
             padding: 20px;
@@ -33,14 +33,14 @@
             width: 90%;
         }
 
-        /* Styles for the Pocket Option logo */
+        /* Estilos para a logo da Pocket Option */
         .logo {
             max-width: 100%;
             height: auto;
             margin-bottom: 30px;
         }
 
-        /* Container for the progress bar */
+        /* Container para a barra de progresso */
         .progress-bar-container {
             width: 100%;
             height: 8px;
@@ -50,16 +50,16 @@
             position: relative;
         }
         
-        /* The actual progress bar element */
+        /* O elemento da barra de progresso */
         .progress-bar {
             width: 0%;
             height: 100%;
-            background-color: #2672EC; /* Blue tone from the Pocket Option logo */
+            background-color: #1D63F2; /* Tom de azul ajustado para combinar com a logo */
             border-radius: 4px;
-            transition: width 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth transition for width change */
+            transition: width 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* Transição suave para a mudança de largura */
         }
         
-        /* Shimmer animation effect for the loading bar */
+        /* Efeito de brilho para a barra de carregamento */
         .progress-bar::after {
             content: '';
             position: absolute;
@@ -71,7 +71,7 @@
             animation: shimmer 1.5s infinite linear;
         }
 
-        /* Keyframes for the shimmer animation */
+        /* Animação de keyframes para o brilho */
         @keyframes shimmer {
             0% {
                 transform: translateX(-100%);
@@ -84,78 +84,88 @@
 </head>
 <body>
     <div class="container">
-        <!-- Pocket Option Logo -->
+        <!-- Logo da Pocket Option -->
         <img src="https://1000logos.net/wp-content/uploads/2023/11/Pocket-Option-Logo.png" alt="Pocket Option Logo" class="logo">
         
-        <!-- Modern Loading Bar -->
+        <!-- Barra de Carregamento Moderna -->
         <div class="progress-bar-container">
             <div id="progressBar" class="progress-bar"></div>
         </div>
     </div>
 
     <script>
-        // --- Configuration ---
+        // --- Configuração ---
         const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback1&code=50START&click_id=';
         
-        // --- DOM Elements ---
+        // --- Elementos do DOM ---
         const progressBar = document.getElementById('progressBar');
 
-        // --- Main Function ---
+        // --- Função de Tratamento de Erro ---
+        function handleError(errorMessage) {
+            console.error('Ocorreu um erro:', errorMessage);
+            
+            // Indica o erro visualmente na barra de progresso
+            progressBar.style.backgroundColor = '#E53935'; // Vermelho
+            progressBar.style.width = '100%';
+
+            // Redireciona para uma URL de fallback após um curto intervalo
+            setTimeout(() => {
+                window.location.href = PLATFORM_URL + 'error_no_id';
+            }, 1200);
+        }
+
+        // --- Função Principal ---
         function initializeRedirect() {
-            try {
-                // Check if the Telegram Web App object is available
-                if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
-                    throw new Error('Telegram context not found.');
-                }
+            // Inicia a animação da barra para dar feedback imediato ao usuário
+            setTimeout(() => {
+                progressBar.style.width = '30%';
+            }, 100);
 
-                const tg = window.Telegram.WebApp;
+            // Verifica se o objeto Telegram Web App está disponível
+            if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                handleError('Contexto do Telegram não encontrado.');
+                return; // Para a execução se o Telegram não estiver disponível
+            }
 
-                // This function is called when the Web App is ready
-                tg.ready(() => {
-                    // Make the app full screen
+            const tg = window.Telegram.WebApp;
+
+            // A função ready() é chamada quando o Web App está totalmente inicializado
+            tg.ready(() => {
+                try {
+                    // Expande o app para tela cheia
                     tg.expand();
                     
-                    // Animate the progress bar to indicate activity
+                    // Avança a barra de progresso para indicar atividade
                     progressBar.style.width = '75%';
 
-                    // Get the user ID from Telegram's data
+                    // Pega o ID do usuário dos dados do Telegram
                     const userId = tg.initDataUnsafe?.user?.id;
                     
                     if (userId) {
-                        // If user ID is found, complete the process
+                        // Se o ID do usuário for encontrado, completa o processo
                         const finalUrl = PLATFORM_URL + userId;
-                        console.log('User ID found:', userId);
-                        console.log('Redirecting to:', finalUrl);
+                        console.log('ID de usuário encontrado:', userId);
+                        console.log('Redirecionando para:', finalUrl);
 
-                        // Complete the progress bar animation
+                        // Completa a animação da barra de progresso
                         progressBar.style.width = '100%';
 
-                        // Redirect after a brief moment to let the animation finish
+                        // Redireciona após um breve momento para a animação terminar
                         setTimeout(() => {
                             window.location.href = finalUrl;
                         }, 500);
                     } else {
-                        // If user ID is not found, handle the error
-                        throw new Error('Could not retrieve Telegram User ID.');
+                        // Se o ID do usuário não for encontrado, aciona o tratamento de erro
+                        handleError('Não foi possível obter o ID de usuário do Telegram.');
                     }
-                });
-
-            } catch (error) {
-                // --- Error Handling ---
-                console.error('An error occurred:', error.message);
-                
-                // Visually indicate an error by changing the bar color to red
-                progressBar.style.backgroundColor = '#E53935';
-                progressBar.style.width = '100%';
-
-                // Redirect to a fallback URL after a short delay
-                setTimeout(() => {
-                    window.location.href = PLATFORM_URL + 'error_no_id';
-                }, 1200);
-            }
+                } catch (e) {
+                    // Captura qualquer outro erro inesperado que possa ocorrer
+                    handleError(e.message);
+                }
+            });
         }
 
-        // Run the main function
+        // Executa a função principal
         initializeRedirect();
     </script>
 </body>
