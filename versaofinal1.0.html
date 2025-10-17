@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Redirecting...</title>
+    <!-- Imports the official Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Basic reset for all elements */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Styles the main body of the page */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            /* White background as requested */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            /* Prevents scrollbars */
+        }
+
+        /* Main container for the content */
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 300px;
+            width: 90%;
+        }
+
+        /* Styles for the Pocket Option logo */
+        .logo {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 30px;
+        }
+
+        /* Container for the loading bar */
+        .loading-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e7ff;
+            /* Lighter blue for the track */
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* The actual loading bar that animates */
+        .loading-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #3b82f6;
+            /* Modern blue color inspired by Pocket Option */
+            border-radius: 4px;
+            animation: loading-animation 1.5s ease-in-out infinite;
+        }
+
+        /* Keyframe animation for the loading bar */
+        @keyframes loading-animation {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            50% {
+                transform: translateX(0%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Pocket Option logo -->
+        <img src="https://1000logos.net/wp-content/uploads/2023/11/Pocket-Option-Logo.png" alt="Pocket Option Logo"
+            class="logo">
+
+        <!-- Modern loading bar -->
+        <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // The base URL for the redirection. The user's Telegram ID will be appended.
+        const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback1&code=50START&click_id=';
+
+        /**
+         * Redirects the user to the final URL.
+         * @param {string | number | null} userId - The user's Telegram ID or null if not found.
+         */
+        function redirectToPlatform(userId) {
+            // If a userId is present, append it. Otherwise, append 'error'.
+            const finalId = userId || 'error_no_id';
+            const finalUrl = PLATFORM_URL + finalId;
+
+            console.log(`Redirecting to: ${finalUrl}`);
+            // Perform the redirection
+            window.location.replace(finalUrl);
+        }
+
+        /**
+         * Main function to initialize the redirection process.
+         */
+        function initializeRedirect() {
+            try {
+                // Check if the Telegram Web App object is available
+                if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                    throw new Error('Telegram Web App context not found.');
+                }
+
+                const tg = window.Telegram.WebApp;
+
+                // This function is called when the Web App is ready
+                tg.ready();
+
+                // Expands the Mini App to fill the screen for a better user experience
+                tg.expand();
+
+                // Get user ID from Telegram's data
+                const userId = tg.initDataUnsafe?.user?.id;
+
+                // Redirect immediately with the obtained user ID
+                redirectToPlatform(userId);
+
+            } catch (error) {
+                console.error('Initialization Error:', error.message);
+                // In case of an error, redirect without a user ID
+                redirectToPlatform(null);
+            }
+        }
+
+        // --- Execution ---
+
+        // A robust way to start the app.
+        // It's safer to wait for the DOM to be fully loaded.
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeRedirect);
+        } else {
+            // DOM is already loaded
+            initializeRedirect();
+        }
+
+        // A fallback in case the Telegram environment is slow to initialize.
+        // This will attempt to redirect after 2.5 seconds regardless.
+        setTimeout(() => {
+            console.log('Fallback triggered: Redirecting without ID if not already done.');
+            redirectToPlatform(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null);
+        }, 2500);
+    </script>
+</body>
+
+</html>
