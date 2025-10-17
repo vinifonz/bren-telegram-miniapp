@@ -89,33 +89,47 @@
     const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
     
     /**
-     * Sends event data to webhook (non-blocking)
-     * @param {string | number} userId - The user's Telegram ID
-     * @param {string} eventName - The event name (e.g., 'click_app')
-     */
-    function sendWebhook(userId, eventName) {
-        const payload = JSON.stringify({
-            telegram_user_id: userId,
-            event: eventName,
-            timestamp: new Date().toISOString()
-        });
+ * Sends event data to webhook (non-blocking)
+ * @param {string | number} userId - The user's Telegram ID
+ * @param {string} eventName - The event name (e.g., 'click_app')
+ */
+function sendWebhook(userId, eventName) {
+    console.log('=== INICIANDO ENVIO DE WEBHOOK ===');
+    console.log('User ID:', userId);
+    console.log('Event:', eventName);
+    console.log('Webhook URL:', WEBHOOK_URL);
+    
+    const payload = JSON.stringify({
+        telegram_user_id: userId,
+        event: eventName,
+        timestamp: new Date().toISOString()
+    });
+    
+    console.log('Payload:', payload);
 
-        // Try sendBeacon first (best for this use case)
-        if (navigator.sendBeacon) {
-            const blob = new Blob([payload], { type: 'application/json' });
-            navigator.sendBeacon(WEBHOOK_URL, blob);
-            console.log('Webhook sent via sendBeacon');
-        } else {
-            // Fallback: async fetch without waiting
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: payload,
-                keepalive: true // Ensures request completes even if page unloads
-            }).catch(err => console.error('Webhook error:', err));
-            console.log('Webhook sent via fetch');
-        }
+    // Try sendBeacon first (best for this use case)
+    if (navigator.sendBeacon) {
+        console.log('Usando sendBeacon...');
+        const blob = new Blob([payload], { type: 'application/json' });
+        const result = navigator.sendBeacon(WEBHOOK_URL, blob);
+        console.log('sendBeacon result:', result);
+    } else {
+        console.log('sendBeacon não disponível, usando fetch...');
+        // Fallback: async fetch without waiting
+        fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+            keepalive: true
+        })
+        .then(response => {
+            console.log('Fetch response status:', response.status);
+            return response.text();
+        })
+        .then(data => console.log('Fetch response data:', data))
+        .catch(err => console.error('Webhook error:', err));
     }
+}
     
     /**
      * Redirects the user to the final URL.
