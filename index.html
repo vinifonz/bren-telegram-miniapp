@@ -273,9 +273,16 @@
                         titleEl.innerHTML = 'Tudo pronto!';
                         messageEl.textContent = 'Você será redirecionado em instantes';
                         
-                        // Monta a URL final e redireciona
+                        // Monta a URL final
+                        const finalUrl = PLATFORM_URL + userId;
+                        
+                        // MODO DEBUG: Mostra a URL antes de redirecionar
+                        console.log('URL Final:', finalUrl);
+                        console.log('User ID:', userId);
+                        
+                        // Mostra alert com a URL (REMOVER EM PRODUÇÃO)
                         setTimeout(() => {
-                            const finalUrl = PLATFORM_URL + userId;
+                            alert('URL Final:\n\n' + finalUrl + '\n\nUser ID: ' + userId);
                             window.location.href = finalUrl;
                         }, 1500);
                     }, 1000);
