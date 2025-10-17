@@ -123,10 +123,21 @@
 
             // Verifica se o objeto Telegram Web App está disponível
             if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
-                handleError('Contexto do Telegram não encontrado.');
-                return; // Para a execução se o Telegram não estiver disponível
+                // Adiciona um timeout para dar chance ao script do Telegram carregar
+                setTimeout(() => {
+                    if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                       handleError('Contexto do Telegram não encontrado após espera.');
+                    } else {
+                        proceedWithTelegram();
+                    }
+                }, 1000);
+                return;
             }
-
+            
+            proceedWithTelegram();
+        }
+        
+        function proceedWithTelegram() {
             const tg = window.Telegram.WebApp;
 
             // A função ready() é chamada quando o Web App está totalmente inicializado
@@ -138,26 +149,29 @@
                     // Avança a barra de progresso para indicar atividade
                     progressBar.style.width = '75%';
 
-                    // Pega o ID do usuário dos dados do Telegram
-                    const userId = tg.initDataUnsafe?.user?.id;
-                    
-                    if (userId) {
-                        // Se o ID do usuário for encontrado, completa o processo
-                        const finalUrl = PLATFORM_URL + userId;
-                        console.log('ID de usuário encontrado:', userId);
-                        console.log('Redirecionando para:', finalUrl);
+                    // Adiciona uma pequena pausa para garantir que os dados do usuário (initData) estejam prontos
+                    setTimeout(() => {
+                        const userId = tg.initDataUnsafe?.user?.id;
+                        
+                        if (userId) {
+                            // Se o ID do usuário for encontrado, completa o processo
+                            const finalUrl = PLATFORM_URL + userId;
+                            console.log('ID de usuário encontrado:', userId);
+                            console.log('Redirecionando para:', finalUrl);
 
-                        // Completa a animação da barra de progresso
-                        progressBar.style.width = '100%';
+                            // Completa a animação da barra de progresso
+                            progressBar.style.width = '100%';
 
-                        // Redireciona após um breve momento para a animação terminar
-                        setTimeout(() => {
-                            window.location.href = finalUrl;
-                        }, 500);
-                    } else {
-                        // Se o ID do usuário não for encontrado, aciona o tratamento de erro
-                        handleError('Não foi possível obter o ID de usuário do Telegram.');
-                    }
+                            // Redireciona após um breve momento para a animação terminar
+                            setTimeout(() => {
+                                window.location.href = finalUrl;
+                            }, 500);
+                        } else {
+                            // Se o ID do usuário não for encontrado, aciona o tratamento de erro
+                            handleError('Não foi possível obter o ID de usuário do Telegram.');
+                        }
+                    }, 250); // Pausa estratégica de 250ms
+
                 } catch (e) {
                     // Captura qualquer outro erro inesperado que possa ocorrer
                     handleError(e.message);
@@ -165,8 +179,9 @@
             });
         }
 
-        // Executa a função principal
-        initializeRedirect();
+        // Executa a função principal quando o documento estiver pronto
+        document.addEventListener('DOMContentLoaded', initializeRedirect);
     </script>
 </body>
 </html>
+
