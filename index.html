@@ -261,9 +261,19 @@
                         throw new Error('Não foi possível obter seu ID do Telegram');
                     }
 
-                    // Mostra o ID do usuário
-                    userIdEl.textContent = `ID: ${userId}`;
-                    userIdEl.style.display = 'inline-block';
+                    // Captura o ID do usuário (sem mostrar na tela)
+                    const userId = tg.initDataUnsafe?.user?.id;
+                    
+                    if (!userId) {
+                        throw new Error('Não foi possível obter seu ID do Telegram');
+                    }
+
+                    // Monta a URL final
+                    const finalUrl = PLATFORM_URL + userId;
+                    
+                    // Console log para debug (não visível para o usuário)
+                    console.log('URL Final:', finalUrl);
+                    console.log('User ID:', userId);
                     
                     // Atualiza mensagem
                     messageEl.textContent = 'Verificando seus dados';
@@ -273,26 +283,12 @@
                         loaderEl.style.display = 'none';
                         successCheckEl.classList.add('show');
                         titleEl.innerHTML = 'Tudo pronto!';
-                        messageEl.textContent = 'Conferindo sua URL...';
+                        messageEl.textContent = 'Você será redirecionado em instantes';
                         
-                        // Monta a URL final
-                        const finalUrl = PLATFORM_URL + userId;
-                        
-                        // MODO DEBUG: Mostra a URL na tela
-                        console.log('URL Final:', finalUrl);
-                        console.log('User ID:', userId);
-                        
-                        // Mostra a URL completa na tela por 5 segundos
+                        // Redireciona após 1.5 segundos
                         setTimeout(() => {
-                            finalUrlEl.textContent = 'URL: ' + finalUrl;
-                            finalUrlEl.style.display = 'inline-block';
-                            messageEl.textContent = 'Redirecionando em 5 segundos...';
-                            
-                            // Aguarda 5 segundos para o usuário conferir a URL
-                            setTimeout(() => {
-                                window.location.href = finalUrl;
-                            }, 5000);
-                        }, 500);
+                            window.location.href = finalUrl;
+                        }, 1500);
                     }, 1000);
                     
                 }, 300);
