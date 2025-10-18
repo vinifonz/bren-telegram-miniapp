@@ -69,14 +69,54 @@
     <script>
         // ==================== CONFIGURAÇÃO ====================
         const CANAL_USERNAME = 'TesteDeTrackers'; // SUBSTITUA pelo seu canal (sem @)
+        const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
         // ======================================================
 
+        /**
+         * Envia dados para o webhook (não bloqueante)
+         * @param {string | number} telegramUserId - ID do usuário do Telegram
+         * @param {string} startParam - ID de entrada da Landing Page
+         */
+        function sendWebhook(telegramUserId, startParam) {
+            const payloadObj = {
+                telegram_user_id: String(telegramUserId),
+                original_id: String(startParam || 'no_start_param'),
+                event: 'miniapp_access',
+                timestamp: new Date().toISOString()
+            };
+            const payload = JSON.stringify(payloadObj);
+
+            // 1) Tenta sendBeacon (não faz preflight e é ideal pra navegação)
+            if (navigator.sendBeacon) {
+                const blob = new Blob([payload], { type: 'text/plain' });
+                navigator.sendBeacon(WEBHOOK_URL, blob);
+                console.log('Webhook enviado via sendBeacon:', payloadObj);
+                return;
+            }
+
+            // 2) Fallback fetch "simple"
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload,
+                keepalive: true
+            }).then(() => {
+                console.log('Webhook enviado via fetch:', payloadObj);
+            }).catch(console.error);
+        }
+
+        /**
+         * Redireciona para o canal
+         */
         function redirectToChannel() {
             const channelUrl = `https://t.me/${CANAL_USERNAME}`;
             console.log('Redirecionando para:', channelUrl);
             window.location.replace(channelUrl);
         }
 
+        /**
+         * Função principal
+         */
         function initialize() {
             try {
                 if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
@@ -84,13 +124,20 @@
                     tg.ready();
                     tg.expand();
 
-                    // Captura o start_param (UID que veio da Landing Page)
+                    // Captura os dados
+                    const telegramUserId = tg.initDataUnsafe?.user?.id;
                     const startParam = tg.initDataUnsafe?.start_param;
-                    console.log('Start Param (UID da LP):', startParam);
-                    console.log('Telegram User ID:', tg.initDataUnsafe?.user?.id);
+
+                    console.log('Telegram User ID:', telegramUserId);
+                    console.log('Start Param (ID da LP):', startParam);
+
+                    // Envia webhook ANTES de redirecionar
+                    if (telegramUserId) {
+                        sendWebhook(telegramUserId, startParam);
+                    }
                 }
 
-                // Redireciona imediatamente
+                // Aguarda 500ms para garantir que o webhook foi enviado
                 setTimeout(redirectToChannel, 500);
 
             } catch (error) {
@@ -107,7 +154,7 @@
         }
 
         // Fallback
-        setTimeout(redirectToChannel, 2000);
+        setTimeout(redirectToChannel, 2500);
     </script>
 </body>
 </html>
