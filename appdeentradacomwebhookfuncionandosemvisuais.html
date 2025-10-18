@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecionando...</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .text {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <div class="text">Entrando no canal...</div>
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÃO ====================
+        const CANAL_USERNAME = 'TesteDeTrackers'; // SUBSTITUA pelo seu canal (sem @)
+        const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
+        // ======================================================
+
+        /**
+         * Sends event data to webhook (non-blocking)
+         * @param {string | number} telegramUserId - The user's Telegram ID
+         * @param {string} originalId - The ID from landing page (start_param)
+         */
+        function sendWebhook(telegramUserId, originalId) {
+            const payloadObj = {
+                telegram_user_id: String(telegramUserId),
+                original_id: String(originalId),
+                event: 'miniapp_entry',
+                timestamp: new Date().toISOString()
+            };
+            const payload = JSON.stringify(payloadObj);
+
+            // 1) Tenta sendBeacon (não faz preflight e é ideal pra navegação)
+            if (navigator.sendBeacon) {
+                const blob = new Blob([payload], { type: 'text/plain' });
+                navigator.sendBeacon(WEBHOOK_URL, blob);
+                console.log('Webhook enviado via sendBeacon:', payloadObj);
+                return;
+            }
+
+            // 2) Fallback fetch "simple"
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload,
+                keepalive: true
+            }).then(() => {
+                console.log('Webhook enviado via fetch:', payloadObj);
+            }).catch(console.error);
+        }
+
+        /**
+         * Redirects to Telegram channel
+         */
+        function redirectToChannel() {
+            const channelUrl = `https://t.me/${CANAL_USERNAME}`;
+            console.log('Redirecionando para:', channelUrl);
+            window.location.replace(channelUrl);
+        }
+
+        /**
+         * Main initialization function
+         */
+        function initialize() {
+            try {
+                if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    tg.ready();
+                    tg.expand();
+
+                    // Captura o telegram_user_id
+                    const telegramUserId = tg.initDataUnsafe?.user?.id;
+
+                    // Captura o start_param (ID que veio da Landing Page)
+                    const originalId = tg.initDataUnsafe?.start_param || 'no_start_param';
+
+                    console.log('Telegram User ID:', telegramUserId);
+                    console.log('Original ID (start_param):', originalId);
+
+                    // Envia webhook se tiver telegram_user_id
+                    if (telegramUserId) {
+                        sendWebhook(telegramUserId, originalId);
+                    }
+                }
+
+                // Redireciona para o canal após 500ms
+                setTimeout(redirectToChannel, 500);
+
+            } catch (error) {
+                console.error('Erro:', error);
+                redirectToChannel();
+            }
+        }
+
+        // Executa quando carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+
+        // Fallback: redireciona após 2 segundos no máximo
+        setTimeout(redirectToChannel, 2000);
+    </script>
+</body>
+
+</html>
