@@ -1,218 +1,186 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecionando...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Redirecting...</title>
+    <!-- Imports the official Telegram Web App script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Basic reset for all elements */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Styles the main body of the page */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #2AABEE 0%, #229ED9 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            /* White background as requested */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
+            /* Prevents scrollbars */
         }
 
+        /* Main container for the content */
         .container {
             text-align: center;
-            padding: 40px 20px;
-            max-width: 320px;
+            padding: 20px;
+            max-width: 300px;
             width: 90%;
         }
 
+        /* Styles for the Pocket Option logo */
         .logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 30px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
-        }
-
-        .text {
-            font-size: 18px;
-            font-weight: 500;
-            color: #ffffff;
+            max-width: 100%;
+            height: auto;
             margin-bottom: 30px;
-            letter-spacing: 0.3px;
         }
 
+        /* Container for the loading bar */
         .loading-bar-container {
             width: 100%;
-            height: 4px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
+            height: 8px;
+            background-color: #e0e7ff;
+            /* Lighter blue for the track */
+            border-radius: 4px;
             overflow: hidden;
-            position: relative;
         }
 
+        /* The actual loading bar that animates */
         .loading-bar {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, 
-                rgba(255, 255, 255, 0.8) 0%, 
-                rgba(255, 255, 255, 1) 50%, 
-                rgba(255, 255, 255, 0.8) 100%);
-            border-radius: 2px;
-            animation: loading-slide 1.5s ease-in-out infinite;
+            background-color: #3b82f6;
+            /* Modern blue color inspired by Pocket Option */
+            border-radius: 4px;
+            animation: loading-animation 1.5s ease-in-out infinite;
         }
 
-        @keyframes loading-slide {
+        /* Keyframe animation for the loading bar */
+        @keyframes loading-animation {
             0% {
                 transform: translateX(-100%);
             }
+
+            50% {
+                transform: translateX(0%);
+            }
+
             100% {
                 transform: translateX(100%);
             }
         }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        /* Animação de entrada suave */
-        .container {
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <!-- Logo do Telegram -->
-        <div class="logo">
-            <img src="https://1000logos.net/wp-content/uploads/2023/04/Telegram-logo.png" alt="Telegram Logo">
-        </div>
-        
-        <!-- Texto -->
-        <div class="text">Entrando no canal...</div>
-        
-        <!-- Barra de carregamento moderna -->
+        <!-- Pocket Option logo -->
+        <img src="https://1000logos.net/wp-content/uploads/2023/11/Pocket-Option-Logo.png" alt="Pocket Option Logo"
+            class="logo">
+
+        <!-- Modern loading bar -->
         <div class="loading-bar-container">
             <div class="loading-bar"></div>
         </div>
     </div>
 
     <script>
-        // ==================== CONFIGURAÇÃO ====================
-        const CANAL_USERNAME = 'TesteDeTrackers'; // SUBSTITUA pelo seu canal (sem @)
-        const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/telegram';
-        // ======================================================
+        // --- Configuration ---
+        const PLATFORM_URL = 'https://pocketoption.com/register?utm_campaign=826608&utm_source=affiliate&utm_medium=sr&a=kiEkiwPsh6owpd&ac=lorenzo-global-postback2&code=50START&click_id=';
+        const WEBHOOK_URL = 'https://webhook.lorenzotraderglobal.com/webhook/lorenzo-miniapp';
 
         /**
-         * Sends event data to webhook (non-blocking)
-         * @param {string | number} telegramUserId - The user's Telegram ID
-         * @param {string} originalId - The ID from landing page (start_param)
-         */
-        function sendWebhook(telegramUserId, originalId) {
+     * Sends event data to webhook (non-blocking)
+     * @param {string | number} userId - The user's Telegram ID
+     * @param {string} eventName - The event name (e.g., 'click_app')
+     */
+        function sendWebhook(userId, eventName) {
             const payloadObj = {
-                telegram_user_id: String(telegramUserId),
-                original_id: String(originalId),
-                event: 'miniapp_entry',
+                telegram_user_id: String(userId),
+                event: eventName,
                 timestamp: new Date().toISOString()
             };
             const payload = JSON.stringify(payloadObj);
 
             // 1) Tenta sendBeacon (não faz preflight e é ideal pra navegação)
             if (navigator.sendBeacon) {
-                const blob = new Blob([payload], { type: 'text/plain' });
+                const blob = new Blob([payload], { type: 'text/plain' }); // <- era application/json
                 navigator.sendBeacon(WEBHOOK_URL, blob);
-                console.log('Webhook enviado via sendBeacon:', payloadObj);
                 return;
             }
 
             // 2) Fallback fetch "simple"
             fetch(WEBHOOK_URL, {
                 method: 'POST',
+                // NÃO envie 'application/json' para evitar preflight
                 headers: { 'Content-Type': 'text/plain' },
                 body: payload,
-                keepalive: true
-            }).then(() => {
-                console.log('Webhook enviado via fetch:', payloadObj);
+                keepalive: true,   // bom para fechamento de página
+                // credentials: 'omit' // (default) mantenha omit
+                // mode: 'cors' // (default) pode omitir
             }).catch(console.error);
         }
 
+
         /**
-         * Redirects to Telegram channel
+         * Redirects the user to the final URL.
+         * @param {string | number | null} userId - The user's Telegram ID or null if not found.
          */
-        function redirectToChannel() {
-            const channelUrl = `https://t.me/${CANAL_USERNAME}`;
-            console.log('Redirecionando para:', channelUrl);
-            window.location.replace(channelUrl);
+        function redirectToPlatform(userId) {
+            const finalId = userId || 'error_no_id';
+            const finalUrl = PLATFORM_URL + finalId;
+
+            // Send webhook BEFORE redirecting (non-blocking)
+            if (userId) {
+                sendWebhook(userId, 'click_app');
+            }
+
+            console.log(`Redirecting to: ${finalUrl}`);
+            window.location.replace(finalUrl);
         }
 
         /**
-         * Main initialization function
+         * Main function to initialize the redirection process.
          */
-        function initialize() {
+        function initializeRedirect() {
             try {
-                if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-                    const tg = window.Telegram.WebApp;
-                    tg.ready();
-                    tg.expand();
-
-                    // Captura o telegram_user_id
-                    const telegramUserId = tg.initDataUnsafe?.user?.id;
-                    
-                    // Captura o start_param (ID que veio da Landing Page)
-                    const originalId = tg.initDataUnsafe?.start_param || 'no_start_param';
-
-                    console.log('Telegram User ID:', telegramUserId);
-                    console.log('Original ID (start_param):', originalId);
-
-                    // Envia webhook se tiver telegram_user_id
-                    if (telegramUserId) {
-                        sendWebhook(telegramUserId, originalId);
-                    }
+                if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+                    throw new Error('Telegram Web App context not found.');
                 }
 
-                // Redireciona para o canal após 500ms
-                setTimeout(redirectToChannel, 500);
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+
+                const userId = tg.initDataUnsafe?.user?.id;
+                redirectToPlatform(userId);
 
             } catch (error) {
-                console.error('Erro:', error);
-                redirectToChannel();
+                console.error('Initialization Error:', error.message);
+                redirectToPlatform(null);
             }
         }
 
-        // Executa quando carregar
+        // --- Execution ---
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initialize);
+            document.addEventListener('DOMContentLoaded', initializeRedirect);
         } else {
-            initialize();
+            initializeRedirect();
         }
 
-        // Fallback: redireciona após 2 segundos no máximo
-        setTimeout(redirectToChannel, 2000);
+        setTimeout(() => {
+            console.log('Fallback triggered: Redirecting without ID if not already done.');
+            redirectToPlatform(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null);
+        }, 2500);
     </script>
 </body>
+
 </html>
